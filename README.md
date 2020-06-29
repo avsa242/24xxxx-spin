@@ -7,7 +7,7 @@ This is a P8X32A/Propeller driver object for 24xxxx series EEPROMs (e.g., 24C512
 
 ## Salient Features
 
-* I2C connection at up to 400kHz
+* I2C connection at up to 1MHz
 * Read single byte, read multiple bytes
 * Write single byte, write multiple bytes (up to 64 per transaction)
 
