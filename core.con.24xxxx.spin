@@ -1,6 +1,6 @@
 {
     --------------------------------------------
-    Filename: core.con.at24cxxxx.spin
+    Filename: core.con.24xxxx.spin
     Author: Jesse Burt
     Description: Low-level constants
     Copyright (c) 2019

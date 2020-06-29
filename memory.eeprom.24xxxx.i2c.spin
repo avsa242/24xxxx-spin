@@ -1,11 +1,11 @@
 {
     --------------------------------------------
-    Filename: memory.eeprom.at24cxxxx.i2c.spin
+    Filename: memory.eeprom.24xxxx.i2c.spin
     Author: Jesse Burt
-    Description: Driver for AT24Cxxxx-series I2C EEPROMs
+    Description: Driver for 24xxxx-series I2C EEPROMs
     Copyright (c) 2019
     Started Oct 26, 2019
-    Updated Oct 27, 2019
+    Updated Jun 29, 2020
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -17,7 +17,7 @@ CON
 
     DEF_SCL           = 28
     DEF_SDA           = 29
-    DEF_HZ            = 400_000
+    DEF_HZ            = 100_000
     I2C_MAX_FREQ      = core#I2C_MAX_FREQ
 
 VAR
@@ -26,7 +26,7 @@ VAR
 OBJ
 
     i2c : "com.i2c"
-    core: "core.con.at24cxxxx.spin"
+    core: "core.con.24xxxx.spin"
     time: "time"
 
 PUB Null
@@ -100,9 +100,6 @@ PRI writeReg(reg, nr_bytes, buff_addr) | cmd_packet, tmp
             i2c.Wr_Block (@cmd_packet, 3)
             i2c.Wr_Block (buff_addr, nr_bytes)
             i2c.Stop
-'            repeat tmp from 0 to nr_bytes-1
-'                i2c.Write (byte[buff_addr][tmp])
-'            i2c.stop
             time.MSleep (core#T_WR)                         ' Wait "Write cycle time"
         OTHER:
             return
