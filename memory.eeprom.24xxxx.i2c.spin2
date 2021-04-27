@@ -12,13 +12,11 @@
 
 CON
 
-    SLAVE_WR          = core#SLAVE_ADDR
-    SLAVE_RD          = core#SLAVE_ADDR|1
+    SLAVE_WR          = core.SLAVE_ADDR
+    SLAVE_RD          = core.SLAVE_ADDR|1
 
-    DEF_SCL           = 28
-    DEF_SDA           = 29
     DEF_HZ            = 100_000
-    I2C_MAX_FREQ      = core#I2C_MAX_FREQ
+    I2C_MAX_FREQ      = core.I2C_MAX_FREQ
 
 VAR
 
@@ -27,23 +25,19 @@ VAR
 
 OBJ
 
-    i2c : "com.i2c"                             ' PASM bit-banged I2C engine
+    i2c : "com.i2c"                             ' bit-banged I2C engine
     core: "core.con.24xxxx"                     ' HW-specific constants
     time: "time"                                ' timekeeping methods
 
-PUB Null{}
+PUB Null()
 'This is not a top-level object
 
-PUB Start{}: okay
-' Start using "standard" Propeller I2C pins and 100kHz
-    okay := startx(DEF_SCL, DEF_SDA, DEF_HZ)
-
-PUB Startx(SCL_PIN, SDA_PIN, I2C_HZ): status
+PUB Startx(SCL_PIN, SDA_PIN, I2C_HZ=DEF_HZ): status
 ' Start using custom I/O settings
-    if lookdown(SCL_PIN: 0..31) and lookdown(SDA_PIN: 0..31) and {
-}   I2C_HZ =< core#I2C_MAX_FREQ
+    if lookdown(SCL_PIN: 0..63) and lookdown(SDA_PIN: 0..63) and {
+}   I2C_HZ <= core.I2C_MAX_FREQ
         if (status := i2c.init(SCL_PIN, SDA_PIN, I2C_HZ))
-            time.msleep(1)
+            waitms(1)
             eesize(512)                     ' most common P1 EE size
             if i2c.present(SLAVE_WR)        ' check device bus presence
                 return
@@ -52,11 +46,11 @@ PUB Startx(SCL_PIN, SDA_PIN, I2C_HZ): status
     ' Lastly - make sure you have at least one free core/cog
     return FALSE
 
-PUB Stop{}
+PUB Stop()
 
-    i2c.deinit{}
+    i2c.deinit()
 
-PUB EEMaxAddr{}: maxaddr
+PUB EEMaxAddr(): maxaddr
 
     return _ee_max_addr
 
@@ -79,7 +73,7 @@ PUB EESize(size): curr_eesize
             return
     _ee_max_addr := ((size * 1024) >> 3) - 1
 
-PUB PageSize{}: psz
+PUB PageSize(): psz
 ' Page size of currently set EEPROM size
     return _page_size
 
@@ -100,8 +94,9 @@ PUB WriteBytes(ee_addr, nr_bytes, ptr_buff)
 '   Valid values (nr_bytes):
 '       128, 256kbit EE: 1..64
 '       512kbit EE: 1..128
+'       1024kbit, 2048kbit EE: 1..256
     case nr_bytes
-        1..128:
+        1..256:
             writereg(ee_addr, nr_bytes, ptr_buff)
         other:
             return
@@ -113,13 +108,13 @@ PRI readReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt
             cmd_pkt.byte[0] := SLAVE_WR
             cmd_pkt.byte[1] := reg_nr.byte[1]
             cmd_pkt.byte[2] := reg_nr.byte[0]
-            i2c.start{}
+            i2c.start()
             i2c.wrblock_lsbf(@cmd_pkt, 3)
 
-            i2c.start{}
+            i2c.start()
             i2c.write(SLAVE_RD)
-            i2c.rdblock_lsbf(ptr_buff, nr_bytes, i2c#NAK)
-            i2c.stop{}
+            i2c.rdblock_lsbf(ptr_buff, nr_bytes, i2c.NAK)
+            i2c.stop()
         other:
             return
 
@@ -130,11 +125,11 @@ PRI writeReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt
             cmd_pkt.byte[0] := SLAVE_WR
             cmd_pkt.byte[1] := reg_nr.byte[1]
             cmd_pkt.byte[2] := reg_nr.byte[0]
-            i2c.start{}
+            i2c.start()
             i2c.wrblock_lsbf(@cmd_pkt, 3)
             i2c.wrblock_lsbf(ptr_buff, nr_bytes)
-            i2c.stop{}
-            time.msleep(core#T_WR)              ' Wait "Write cycle time"
+            i2c.stop()
+            waitms(core.T_WR)                   ' Wait "Write cycle time"
         other:
             return
 
