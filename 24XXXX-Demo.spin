@@ -1,25 +1,59 @@
 {
     --------------------------------------------
-    Filename: core.con.24xxxx.spin
+    Filename: 24XXXX-Demo.spin
     Author: Jesse Burt
-    Description: 24xxxx-specific constants
-    Copyright (c) 2019
-    Started Oct 26, 2019
-    Updated Oct 27, 2019
+    Description: Simple demo of the 24XXXX EEPROM driver
+        * Memory hexdump display
+    Copyright (c) 2022
+    Started May 9, 2020
+    Updated Jul 30, 2022
     See end of file for terms of use.
     --------------------------------------------
 }
 
 CON
 
-    I2C_MAX_FREQ        = 1_000_000         ' Datasheet specifies 1MHz max at 5.0V, 400kHz at 2.7V
-    SLAVE_ADDR          = $50 << 1
+    _clkmode    = cfg#_clkmode
+    _xinfreq    = cfg#_xinfreq
 
-    T_WR                = 10                ' Write cycle time (ms)
-    T_WR_B              = 5                 ' Write cycle time, for parts with process letter "B"
+' -- User-modifiable constants
+    SER_BAUD    = 115_200
+    LED         = cfg#LED1
 
-PUB Null
-' This is not a top-level object
+    { I2C configuration }
+    SCL_PIN     = 28
+    SDA_PIN     = 29
+    I2C_FREQ    = 1_000_000
+    ADDR_BITS   = 0
+
+    { memory size }
+    PART        = 512                           ' kbits
+' --
+
+    MEMSIZE     = (PART / 8) * 1024
+
+OBJ
+
+    cfg : "core.con.boardcfg.flip"
+    ser : "com.serial.terminal.ansi"
+    time: "time"
+    mem : "memory.eeprom.24xxxx"
+
+PUB Setup{}
+
+    ser.start(SER_BAUD)
+    time.msleep(30)
+    ser.clear{}
+    ser.strln(string("Serial terminal started"))
+    if mem.startx(SCL_PIN, SDA_PIN, I2C_FREQ, ADDR_BITS)
+        ser.strln(string("24XXXX driver started"))
+    else
+        ser.strln(string("24XXXX driver failed to start - halting"))
+        repeat
+
+    demo{}
+
+#include "memdemo.common.spinh"
 
 DAT
 {
