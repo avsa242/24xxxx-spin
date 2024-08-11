@@ -34,6 +34,7 @@ CON
 
 VAR
 
+    word _t_wr                                  ' write cycle time
     byte _page_size                             ' EE page size, in bytes
     byte _addr_bits
 
@@ -69,6 +70,7 @@ PUB startx(SCL_PIN, SDA_PIN, I2C_HZ, ADDR_BITS): status
             time.msleep(1)
             _addr_bits := (ADDR_BITS << 1)
             ee_size(512)                        ' default to 512kbit EEPROM
+            set_write_cycle_time(10_000)        '   and slowest max write cycle time
             if ( i2c.present(SLAVE_WR|_addr_bits) )
                 return
     ' if this point is reached, something above failed
@@ -81,6 +83,8 @@ PUB stop()
 ' Stop the driver
     i2c.deinit()
     _page_size := 0
+    _t_wr := 0
+    _addr_bits := 0
 
 
 PUB ee_size(size): curr_eesize
@@ -135,6 +139,13 @@ PUB rd_block_msbf(ptr_buff, addr, nr_bytes) | cmd_pkt
     i2c.stop()
 
 
+PUB set_write_cycle_time(t)
+' Set the write cycle time, in microseconds
+'   Valid values:
+'       5_000..10_000 (clamped to range)
+    _t_wr := 5_000 #> t <# 10_000
+
+
 PUB wr_block_lsbf(addr, ptr_buff, nr_bytes) | cmd_pkt
 ' Write a block of memory starting at addr, LSB-first
     cmd_pkt.byte[0] := (SLAVE_WR | _addr_bits)
@@ -144,7 +155,7 @@ PUB wr_block_lsbf(addr, ptr_buff, nr_bytes) | cmd_pkt
     i2c.wrblock_lsbf(@cmd_pkt, 3)
     i2c.wrblock_lsbf(ptr_buff, nr_bytes)
     i2c.stop()
-    time.usleep(core.T_WR)                      ' Wait "Write cycle time"
+    time.usleep(_t_wr)                          ' Wait "Write cycle time"
 
 
 PUB wr_block_msbf(addr, ptr_buff, nr_bytes) | cmd_pkt
@@ -156,7 +167,7 @@ PUB wr_block_msbf(addr, ptr_buff, nr_bytes) | cmd_pkt
     i2c.wrblock_lsbf(@cmd_pkt, 3)
     i2c.wrblock_msbf(ptr_buff, nr_bytes)
     i2c.stop()
-    time.usleep(core.T_WR)                      ' Wait "Write cycle time"
+    time.usleep(_t_wr)                          ' Wait "Write cycle time"
 
 DAT
 {
