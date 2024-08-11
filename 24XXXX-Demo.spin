@@ -1,58 +1,57 @@
 {
-    --------------------------------------------
-    Filename: 24XXXX-Demo.spin
-    Author: Jesse Burt
-    Description: Simple demo of the 24XXXX EEPROM driver
+----------------------------------------------------------------------------------------------------
+    Filename:       24XXXX-Demo.spin
+    Description:    Demo of the 24XXXX EEPROM driver
         * Memory hexdump display
-    Copyright (c) 2023
-    Started May 9, 2020
-    Updated Jul 13, 2023
-    See end of file for terms of use.
-    --------------------------------------------
+    Author:         Jesse Burt
+    Started:        May 9, 2020
+    Updated:        Aug 11, 2024
+    Copyright (c) 2024 - See end of file for terms of use.
+----------------------------------------------------------------------------------------------------
 }
 
 CON
 
-    _clkmode    = cfg#_clkmode
-    _xinfreq    = cfg#_xinfreq
+    _clkmode    = cfg._clkmode
+    _xinfreq    = cfg._xinfreq
 
 ' -- User-modifiable constants
-    SER_BAUD    = 115_200
-    LED         = cfg#LED1
-
-    { memory size }
-    PART        = 512                           ' kbits
+    PART        = 512                           ' memory size in kilobits
 ' --
 
     MEMSIZE     = (PART / 8) * 1024
 
+
 OBJ
 
     cfg:    "boardcfg.flip"
-    ser:    "com.serial.terminal.ansi"
     time:   "time"
+    ser:    "com.serial.terminal.ansi" | SER_BAUD=115_200
     mem:    "memory.eeprom.24xxxx" | SCL=28, SDA=29, I2C_FREQ=400_000, I2C_ADDR=0
 
-PUB setup{}
 
-    ser.start(SER_BAUD)
+PUB setup()
+
+    ser.start()
     time.msleep(30)
-    ser.clear{}
-    ser.strln(string("Serial terminal started"))
+    ser.clear()
+    ser.strln(@"Serial terminal started")
+
     if ( mem.start() )
-        ser.strln(string("24XXXX driver started"))
+        ser.strln(@"24XXXX driver started")
     else
-        ser.strln(string("24XXXX driver failed to start - halting"))
+        ser.strln(@"24XXXX driver failed to start - halting")
         repeat
 
     mem.ee_size(PART)
-    demo{}
+    demo()
 
-#include "memdemo.common.spinh"
+#include "memdemo.common.spinh"                 ' use code common to all memory demos
+
 
 DAT
 {
-Copyright 2022 Jesse Burt
+Copyright 2024 Jesse Burt
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,
